@@ -2,73 +2,78 @@
 
 이 프로젝트는 파이썬을 사용하여 인하대학교 사이트에 로그인을 확인하고 이름과 학번을 가져오는 스크립트입니다.
 
-## 파이썬 패키지 설치하기
+## 주요 기능
 
-이제 PyPI에서 최신 코드의 파이썬 패키지를 다운로드 받을 수 있습니다.
+- 인하대학교 클라우드(https://cloud.inha.ac.kr) 로그인
+- 학생 이름 및 학번 조회
+- CSRF 보안 대응
+- CLI 인터페이스 및 환경 변수 지원
+
+## 설치 방법
+
+### PyPI 이용
 
 ``` sh
 $ pip install inha-cloud
 ```
 
-## 시작하기 전에
+### 소스코드 이용
 
-1. `.env` 파일을 생성하고 아래와 같이 사용자 아이디와 비밀번호를 입력하세요.
-
-``` env
-INHA_USERNAME=your_username
-INHA_PASSWORD=your_password
-```
-
-`your_username` 및 `your_password`를 실제 사용자 아이디와 비밀번호로 바꿔주세요.
-
-2. 필요한 패키지를 설치하세요. 터미널에서 다음 명령어를 실행하세요:
-
+1. 저장소를 클론합니다:
 ``` sh
-$ pip install python-dotenv requests bs4
+$ git clone https://github.com/inha-fc/inha-login-fetcher.git
+$ cd inha-login-fetcher
 ```
 
+2. 필요한 패키지를 설치합니다:
 ``` sh
 $ pip install -r requirements.txt
 ```
 
-## 실행방법
+## 설정
 
-프로젝트를 클론한 디렉토리에서 터미널을 열고 다음 명령어를 실행하세요:
+프로젝트 루트 디렉토리에 `.env` 파일을 생성하고 다음과 같이 정보를 입력하세요:
+
+``` env
+INHA_USERNAME=사용자_아이디
+INHA_PASSWORD=비밀번호
+```
+
+## 사용 방법
+
+### CLI 실행
+
+스크립트를 직접 실행할 수 있습니다:
 
 ``` sh
 $ python main.py
 ```
 
-로그인이 성공하면 이름과 학번이 출력되고, 실패하면 "로그인에 실패하였습니다."가 출력됩니다.
+인자를 통해 아이디와 비밀번호를 직접 전달할 수도 있습니다 (이 경우 `.env` 설정보다 우선합니다):
 
-## 예제
+``` sh
+$ python main.py -u 아이디 -p 비밀번호
+```
+
+### 라이브러리 사용 예시
 
 ``` python
 from inha_cloud.inha_cloud import InhaCloud
 
 def main():
-    # Instantiate an InhaCloud object
+    # InhaCloud 객체 생성 (기본적으로 .env 파일에서 정보를 읽어옵니다)
     inha = InhaCloud()
 
-    # Login to the InhaCloud with the username and password stored in the .env file
-    inha.login()
-
-    # Login to the InhaCloud with the provided username and password
-    inha.login(username="your_username", password="your_password")
-
-    # Alternatively, you can set the username and password instance variables and then login without passing them as arguments
-    inha.username = "your_username"
-    inha.password = "your_password"
-    inha.login()
-
-    # If login fails, exit the program
+    # 로그인 실행 (성공 시 True, 실패 시 False 반환)
     if not inha.login():
-        exit()
+        print("로그인에 실패하였습니다.")
+        return
 
-    # Fetch login information and print name and student ID
+    # 로그인 정보 가져오기
     login_info = inha.fetch_login_info()
-    print(login_info["name"])
-    print(login_info["student_id"])
+    if login_info:
+        print(f"이름: {login_info['name']}")
+        print(f"학번: {login_info['student_id']}")
 
 if __name__ == '__main__':
     main()

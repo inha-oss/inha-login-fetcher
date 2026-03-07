@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="inha_cloud",
-    version="0.1.2",
+    version="0.2.0",
     packages=find_packages(),
     description="A simple fetcher for Inha University login",
     author="Lee Jongyoung",
@@ -10,8 +10,8 @@ setup(
     url="https://github.com/inha-fc/inha-login-fetcher",
     install_requires=[
         'python-dotenv',
-        'requestes',
-        'bs4',
+        'requests',
+        'beautifulsoup4',
     ],
     classifiers=[
         "License :: OSI Approved :: MIT License",

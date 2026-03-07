@@ -2,73 +2,78 @@
 
 This project is a Python script that logs in to the Inha University site, checks the login status, and retrieves the user's name and student ID.
 
-## Install Python Package
+## Features
 
-You can now download the Python package of the latest code from PyPI.
+- Login to Inha University Cloud (https://cloud.inha.ac.kr)
+- Fetch student name and student ID
+- Support for CSRF protection
+- CLI interface and environment variable support
+
+## Installation
+
+### From PyPI
 
 ``` sh
 $ pip install inha-cloud
 ```
 
-## Before you begin
+### From Source
 
-1. Create a `.env` file and enter your username and password as shown below.
+1. Clone the repository:
+``` sh
+$ git clone https://github.com/inha-fc/inha-login-fetcher.git
+$ cd inha-login-fetcher
+```
+
+2. Install the necessary packages:
+``` sh
+$ pip install -r requirements.txt
+```
+
+## Configuration
+
+Create a `.env` file in the project root and enter your credentials:
 
 ``` env
 INHA_USERNAME=your_username
 INHA_PASSWORD=your_password
 ```
 
-Replace `your_username` and `your_password` with your actual Inha University username and password.
+## Usage
 
-2. Install the necessary packages. In the terminal, run the following command:
+### CLI
 
-``` sh
-$ pip install python-dotenv requests bs4
-```
-
-``` sh
-$ pip install -r requirements.txt
-```
-
-## How to run
-
-Open the terminal in the cloned directory of the project and run the following command:
+You can run the script directly:
 
 ``` sh
 $ python main.py
 ```
 
-If the login is successful, the user's name and student ID will be displayed. If it fails, "Login failed." will be displayed.
+Or provide credentials as arguments (this overrides `.env`):
 
-## Example
+``` sh
+$ python main.py -u your_username -p your_password
+```
+
+### Library Example
 
 ``` python
 from inha_cloud.inha_cloud import InhaCloud
 
 def main():
-    # Instantiate an InhaCloud object
+    # Instantiate an InhaCloud object (loads from .env by default)
     inha = InhaCloud()
 
-    # Login to the InhaCloud with the username and password stored in the .env file
-    inha.login()
-
-    # Login to the InhaCloud with the provided username and password
-    inha.login(username="your_username", password="your_password")
-
-    # Alternatively, you can set the username and password instance variables and then login without passing them as arguments
-    inha.username = "your_username"
-    inha.password = "your_password"
-    inha.login()
-
-    # If login fails, exit the program
+    # Login (returns True/False)
     if not inha.login():
-        exit()
+        print("Login failed.")
+        return
 
-    # Fetch login information and print name and student ID
+    # Fetch login information
     login_info = inha.fetch_login_info()
-    print(login_info["name"])
-    print(login_info["student_id"])
+    if login_info:
+        print(f"Name: {login_info['name']}")
+        print(f"Student ID: {login_info['student_id']}")
 
 if __name__ == '__main__':
     main()
