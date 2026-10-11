@@ -1,34 +1,36 @@
+"""인증 정보를 출력하지 않는 로컬 학교 계정 검증 도구."""
+
 import argparse
-import sys
+from getpass import getpass
+
 from inha_cloud.inha_cloud import InhaCloud
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Inha University Login Fetcher")
-    parser.add_argument("-u", "--username", help="Inha Portal ID")
-    parser.add_argument("-p", "--password", help="Inha Portal Password")
+    parser = argparse.ArgumentParser(description="인하대학교 계정 소유 확인")
+    parser.add_argument("-u", "--username", help="학교 계정 아이디")
+    parser.add_argument("--env", action="store_true", help="환경 변수와 .env 사용")
+    parser.add_argument("--timeout", type=float, default=15, help="요청 제한 시간(초)")
     args = parser.parse_args()
-
-    # Instantiate an InhaCloud object
-    inha = InhaCloud()
-
-    # Try to login
-    # If username and password are provided in arguments, they will override .env
     try:
-        if inha.login(username=args.username, password=args.password):
-            print("Login successful!")
-            # Fetch login information and print name and student ID
-            login_info = inha.fetch_login_info()
-            if login_info:
-                print(f"Name: {login_info['name']}")
-                print(f"Student ID: {login_info['student_id']}")
-            else:
-                print("Could not fetch login information.")
-        else:
-            print("Login failed.")
-            sys.exit(1)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        sys.exit(1)
+        with InhaCloud(username=args.username, load_env=args.env,
+                       timeout=args.timeout) as client:
+            username = client.username or input("학교 계정 아이디: ").strip()
+            password = client.password or getpass("학교 계정 비밀번호: ")
+            try:
+                success = client.login(username=username, password=password)
+            finally:
+                password = None
+            print(client.message)
+            print("결과 코드: " + client.status.value)
+            return 0 if success else 1
+    except (ValueError, EOFError):
+        print("입력 또는 인증 화면을 확인할 수 없습니다.")
+        return 2
+    except KeyboardInterrupt:
+        print("인증을 취소했습니다.")
+        return 130
 
-if __name__ == '__main__':
-    main()
+
+if __name__ == "__main__":
+    raise SystemExit(main())
