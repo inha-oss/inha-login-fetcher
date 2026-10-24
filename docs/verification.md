@@ -28,10 +28,10 @@ python -m inha_cloud --help
 - 저장소 밖의 새 Python 3.11 환경에 sdist를 설치하고 해당 site-packages에서 패키지를 불러오는 것을 확인했다. sdist에 포함된 테스트와 루프백 가드로 전체 58개가 통과했으며, 콘솔·모듈 진입점의 help/version도 실행했다.
 - 설치된 모듈 CLI를 실제 루프백 HTTPS 서버와 연결해 성공·인증 거절·인코딩된 MFA·비표준 상태 코드·계정 불일치·미신뢰 인증서·실제 읽기 타임아웃 7개 시나리오를 실행했다. 상태·종료 코드·후속 요청 차단을 확인했고 출력에 신원·비밀번호가 없었다.
 - 설치된 CLI를 PTY에서 실행해 아이디/비밀번호 입력을 진행했다. 합성 인증은 성공했고, 비밀번호는 터미널 출력에 표시되지 않았다.
-- `actionlint .github/workflows/ci.yml` 통과. CI는 Python 3.11–3.14 및 Linux/macOS/Windows용으로 정의했으나 GitHub 원격 실행 및 Linux/Windows 실실행 결과는 아직 없다.
+- `actionlint` 통과. CI는 Python 3.11–3.14 및 Linux/macOS/Windows에서 실행하며 배포 전에 전체 성공이 필요하다. 최초 원격 실행에서 발견한 Windows 오류와 배포 게이트는 아래에 기록했다.
 - 버전은 `_version.py` 한 곳에서 관리하고, `uv.lock`의 런타임 의존성 조합을 개발·CI 테스트에서 사용한다. 일반 wheel 설치에는 pyproject의 호환 버전 범위가 적용되며 빌드 도구·twine까지 이 lock으로 고정한 것은 아니다. Actions 리비전은 GitHub API로 확인한 커밋 SHA로 고정했다.
 
-합성 응답 성공은 실제 학교 로그인을 증명하지 않는다. 빌드 산출물은 `dist/inha_cloud-0.4.0-py3-none-any.whl`, `dist/inha_cloud-0.4.0.tar.gz`이며 아직 배포하지 않았다.
+합성 응답 성공은 실제 학교 로그인을 증명하지 않는다. 빌드 산출물은 `dist/inha_cloud-0.4.0-py3-none-any.whl`, `dist/inha_cloud-0.4.0.tar.gz`이다. 게시 여부는 [GitHub Releases](https://github.com/inha-oss/inha-login-fetcher/releases)와 [PyPI](https://pypi.org/project/inha-cloud/)에서 별도로 확인한다.
 
 ## 추가 사전 검증
 
@@ -62,6 +62,15 @@ python -m inha_cloud --help
 - 최저 직접 의존성 조합(Requests 2.33.0, BeautifulSoup 4.13.1, cryptography 50.0.0)을 새 Python 3.11 환경에 설치하여 전체 테스트가 통과했다. 모든 허용 버전 조합을 열거한 검증은 아니다.
 - `uvx bandit -r inha_cloud -f json`: 오류·탐지 항목 0. `actionlint`도 통과했다.
 - 취약점 조회는 당시 데이터베이스에 알려진 항목만 대상으로 하며 미발견 취약점 부재를 증명하지 않는다. 빌드/검사 도구 전체를 위 의존성 감사 범위에 포함한 것은 아니다.
+
+## 배포 전 원격 검증
+
+- 최초 원격 [CI 40062147104](https://github.com/inha-oss/inha-login-fetcher/actions/runs/40062147104)는 Linux/macOS 테스트·배포본 검사·설치된 CLI 검사를 통과했지만, Windows Python 3.11–3.14의 입력 누락 검사가 실패했다. `NUL` 표준입력을 TTY로 오인하여 `getpass`가 30초 이상 대기한 문제였다.
+- Windows 입력은 `GetConsoleMode`로 실제 콘솔 핸들을 확인하도록 수정했다. 실제 하위 프로세스의 `DEVNULL` 입력 거절 검사를 유지하며, 프롬프트 단위 검증만 OS 터미널 감지와 분리했다. 수정 후 로컬 CLI 20개 검사가 통과했다. Windows 확인은 원격 CI에서 수행한다.
+- 구형 Action의 Node 20 종료 경고를 확인하여 공식 Node 24 리비전으로 갱신했다: checkout v7.0.1, setup-uv v10.3.2, upload-artifact v7.0.2, download-artifact v8.0.2. 커밋 SHA와 각 `action.yml`의 `runs.using`을 확인했다.
+- 현재 GitHub 인증은 PR 생성이 GraphQL/REST 모두 거절되어 브랜치 push로 검증한다. 브랜치 CI 성공 전 main에 통합하지 않고, PyPI 게이트는 태그 커밋과 정확히 같은 main push의 CI 전체 성공을 다시 요구한다.
+- 릴리스 검증은 테스트 12개 조합·wheel/sdist 빌드 1개·설치된 CLI 6개 조합을 모두 포함한다. [현재 CI 결과](https://github.com/inha-oss/inha-login-fetcher/actions/workflows/ci.yml)가 배포 게이트의 기준이다.
+- `uv publish --dry-run --trusted-publishing never`로 파일 검사를 실행했다. 실제 업로드는 하지 않았으며, PyPI 게시에는 프로젝트 소유자가 등록한 Trusted Publisher가 필요하다.
 
 ## 익명 관찰 (2026-10-24, 로그인 요청 없음)
 

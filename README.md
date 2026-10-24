@@ -32,7 +32,7 @@ python -m inha_cloud                    # 동일한 CLI
 
 - 비밀번호 명령행 옵션은 없습니다. 대화형 입력은 `getpass`를 사용하며, 화면 표시 입력으로 대체(`GetPassWarning`)되면 거부합니다.
 - 환경 변수는 `--env`를 명시할 때만 읽습니다(`INHA_USERNAME`, `INHA_PASSWORD`, 프로세스 환경 변수만). `.env` 파일은 읽지 않습니다.
-- 터미널이 아니고 `--env`로 완전한 인증 정보가 없으면 네트워크 요청 전에 `invalid_input`으로 실패합니다.
+- 터미널이 아니고 `--env`로 완전한 인증 정보가 없으면 네트워크 요청 전에 `invalid_input`으로 실패합니다. Windows는 실제 콘솔 핸들도 확인해 `NUL`·파이프에서 비밀번호 입력을 기다리지 않습니다.
 - `--timeout <초>`는 소켓 읽기 시간 제한입니다(유한한 양수). 연결 제한은 5초 또는 지정값 중 작은 값이며 전체 인증 과정의 총 소요 시간 제한은 아닙니다.
 - 이름·계정 ID·비밀번호·쿠키·예외·응답 원문을 출력하지 않습니다. `--json`은 `status`, `message`, `http_status`만 출력합니다.
 - 종료 코드: 0 `success`; 1 `rejected`, `not_authenticated`; 2 `invalid_input`, `page_changed`, `unsafe_destination`, `identity_mismatch`, `http_error`, `closed`; 3 `additional_auth`; 4 `network_error`, `rate_limited`, `service_unavailable`; 70 예상하지 못한 내부 오류(안전한 일반 문구만 출력); 130 중단(KeyboardInterrupt).

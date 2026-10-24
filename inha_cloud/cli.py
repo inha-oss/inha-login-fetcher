@@ -60,8 +60,24 @@ def _parser():
 
 
 def _is_interactive():
-    stdin = sys.stdin
-    return stdin is not None and stdin.isatty()
+    try:
+        if sys.stdin is None or not sys.stdin.isatty():
+            return False
+        if os.name == "nt":
+            # Windows isatty() also accepts NUL, which cannot supply getpass input.
+            import ctypes
+            from ctypes import wintypes
+            import msvcrt
+
+            get_console_mode = ctypes.WinDLL("kernel32", use_last_error=True).GetConsoleMode
+            get_console_mode.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+            get_console_mode.restype = wintypes.BOOL
+            mode = wintypes.DWORD()
+            handle = msvcrt.get_osfhandle(sys.stdin.fileno())
+            return bool(get_console_mode(handle, ctypes.byref(mode)))
+        return True
+    except (OSError, ValueError):
+        return False
 
 
 def _prompt_username():

@@ -51,6 +51,7 @@ class CliTestCase(unittest.TestCase):
             getpass_value, BaseException) else patch("getpass.getpass", side_effect=getpass_value)
         with patch.dict(os.environ, environ, clear=True), patch("sys.stdin", Stdin(stdin, tty)), \
                 patch("inha_cloud.cli.InhaCloud", return_value=client), prompt, \
+                patch("inha_cloud.cli._is_interactive", return_value=tty), \
                 contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = cli.main(argv)
         return code, out.getvalue(), err.getvalue(), client
@@ -240,6 +241,7 @@ class BeforeNetworkTests(CliTestCase):
 
         with patch("getpass.getpass", side_effect=echoing_fallback), patch("sys.stdin", Stdin("", True)), \
                 patch("inha_cloud.cli.InhaCloud") as factory, \
+                patch("inha_cloud.cli._is_interactive", return_value=True), \
                 contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()) as err:
             code = cli.main(["-u", ACCOUNT])
         self.assertEqual(code, 2)
