@@ -1,0 +1,52 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing published release tag (for example v0.4.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+    steps:
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          version: "0.13.1"
+      - name: Retrieve the artifact verified for this release commit
+        shell: bash
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = false
+          commit=$(gh api "repos/$GH_REPO/commits/$RELEASE_TAG" --jq '.sha')
+          run_id=$(gh run list --workflow ci.yml --commit "$commit" --branch main --event push --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          if test -z "$run_id"; then
+            echo "No successful main CI run for the release commit" >&2
+            exit 1
+          fi
+          gh run download "$run_id" --name dist --dir dist
+          version=${RELEASE_TAG#v}
+          test -f "dist/inha_cloud-$version-py3-none-any.whl"
+          test -f "dist/inha_cloud-$version.tar.gz"
+          echo "Verified CI artifact: run $run_id, commit $commit"
+      - name: Publish with the project's registered Trusted Publisher
+        shell: bash
+        run: |
+          version=${RELEASE_TAG#v}
+          uv publish --trusted-publishing always "dist/inha_cloud-$version-py3-none-any.whl" "dist/inha_cloud-$version.tar.gz"

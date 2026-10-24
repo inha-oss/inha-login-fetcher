@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "inha_cloud"
+dynamic = ["version"]
+description = "인하대학교 계정 소유 확인을 위한 로그인 클라이언트"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "Lee Jongyoung", email = "leejongyoung98@inha.edu" }]
+dependencies = [
+    "requests>=2.33.0,<3",
+    "beautifulsoup4>=4.13,<5",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[dependency-groups]
+dev = ["cryptography>=50,<51"]
+
+[project.urls]
+Homepage = "https://github.com/inha-oss/inha-login-fetcher"
+
+[project.scripts]
+inha-login-fetcher = "inha_cloud.cli:main"
+
+[tool.hatch.version]
+path = "inha_cloud/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["inha_cloud"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/inha_cloud", "/tests", "/docs", "/README.md", "/README_ko.md", "/CONTRIBUTE.md", "/CHANGELOG.md", "/LICENSE", "/uv.lock"]
