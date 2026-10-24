@@ -3,7 +3,6 @@ name: CI
 # 오프라인 검증만 수행한다. 학교 서버 요청, 실제 인증, 배포, 비밀 값은 사용하지 않는다.
 on:
   push:
-    branches: [main]
   pull_request:
 
 permissions:
